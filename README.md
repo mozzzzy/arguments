@@ -61,7 +61,7 @@ func main() {
 	args.AddRules(optionRules)
 ```
 
-A rule is defined by `arguments.Option` struct.  
+A rule is defined by `arguments.Option` structure.  
 `arguments.Option` has following public fields.  
 - _Key_  
 	- `string`  
@@ -79,9 +79,9 @@ A rule is defined by `arguments.Option` struct.
 	- `bool`
 	- Specify that this option is required(`true`) or optional(`false`).
 - _Validator_
-	- `func(string, interface{}, ...interface{}) error`
+	- `func(string, interface{}, interface{}) error`
 	- Validator of the option value. See [Validate option's value](#Validate-option's-value) for detail.
-- _ValidatorParams_
+- _ValidatorParam_
 	- `interface{}`
 	- Validator's parameter. See [Validate option's value](#Validate-option's-value) for detail.
 
@@ -124,7 +124,7 @@ func main() {
 
 ## Validate option's value
 We can validate specified option's value when execute `Parse()` method.  
-To inject validation function, we use `Option.Validator` and `Option.ValidatorParams`.  
+To inject validation function, we use `Option.Validator` and `Option.ValidatorParam`.  
   
 For example, we can execute `arguments.ValidateIntMinMax` function to validate  `-port` option's value.
 ```go
@@ -144,7 +144,7 @@ func main() {
 			DefaultValue:    80,
 			Required:        false,
 			Validator:       arguments.ValidateIntMinMax,
-			ValidatorParams: []int{0, 65535},
+			ValidatorParam: []int{0, 65535},
 		},
 	}
 
@@ -165,7 +165,7 @@ func main() {
 	fmt.Println(*vPtr, vErr)
 }
 ```
-In this example, the first element of Options.ValidatorParams is the minimum of -port value. And the second element is maximum.  
+In this example, the first element of Options.ValidatorParam is the minimum of -port value. And the second element is maximum.  
 If you run with `-port 65536`, `aras.Parse()` method returns error like following result.
 ```sh
 $ go run valiate.go -port 65536
@@ -175,6 +175,6 @@ Value of -port 65536 is bigger than maximum 65535
 ## How to define validator function
 Validator function is a function whose type is
 ```
-func(string, interface{}, ...interface{}) error
+func(string, interface{}, interface{}) error
 ```
-The first parameter is the option key, and the second one is the value.  The third parameter is `Option.ValidatorParams`.
+The first parameter is the option key, and the second one is the value.  The third parameter is `Option.ValidatorParam`.

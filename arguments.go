@@ -15,15 +15,15 @@ type Arguments struct {
 }
 
 type Option struct {
-	DefaultValue    interface{}
-	Description     string
-	Key             string
-	Required        bool
-	set             bool
-	Validator       func(string, interface{}, ...interface{}) error
-	ValidatorParams interface{}
-	Value           interface{}
-	ValueType       string
+	DefaultValue   interface{}
+	Description    string
+	Key            string
+	Required       bool
+	set            bool
+	Validator      func(string, interface{}, interface{}) error
+	ValidatorParam interface{}
+	Value          interface{}
+	ValueType      string
 }
 
 /*
@@ -265,7 +265,7 @@ func (args *Arguments) validate() error {
 		// If the option is set, and validator function is specified
 		if opt.set && opt.Validator != nil {
 			// Execute validator
-			err := opt.Validator(opt.Key, opt.Value, opt.ValidatorParams)
+			err := opt.Validator(opt.Key, opt.Value, opt.ValidatorParam)
 			// If validator return error, return it
 			if err != nil {
 				return err

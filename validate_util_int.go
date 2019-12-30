@@ -10,17 +10,9 @@ import (
  */
 
 func ValidateIntMin(
-	optKey string, optValue interface{}, validatorParams ...interface{}) error {
-
-	// Check length of validatorParams
-	checkParamsLenErr := checkParamsLen(1, validatorParams)
-	if checkParamsLenErr != nil {
-		return checkParamsLenErr
-	}
-
-	// Get min and max from validatorParams
-	var validatorParamSlice []int = validatorParams[0].([]int)
-	var min int = validatorParamSlice[0]
+	optKey string, optValue interface{}, validatorParam interface{}) error {
+	// Get min and max from validatorParam
+	min := validatorParam.([]int)[0]
 
 	// Check that option's value is smaller than min
 	if *(optValue.(*int)) < min {
@@ -37,17 +29,9 @@ func ValidateIntMin(
 }
 
 func ValidateIntMax(
-	optKey string, optValue interface{}, validatorParams ...interface{}) error {
-
-	// Check length of validatorParams
-	checkParamsLenErr := checkParamsLen(1, validatorParams)
-	if checkParamsLenErr != nil {
-		return checkParamsLenErr
-	}
-
-	// Get min and max from validatorParams
-	var validatorParamSlice []int = validatorParams[0].([]int)
-	var max int = validatorParamSlice[0]
+	optKey string, optValue interface{}, validatorParam interface{}) error {
+	// Get min and max from validatorParam
+	max := validatorParam.([]int)[0]
 
 	// Check that option's value is bigger than max
 	if *(optValue.(*int)) > max {
@@ -64,18 +48,10 @@ func ValidateIntMax(
 }
 
 func ValidateIntMinMax(
-	optKey string, optValue interface{}, validatorParams ...interface{}) error {
-
-	// Check length of validatorParams
-	checkParamsLenErr := checkParamsLen(1, validatorParams)
-	if checkParamsLenErr != nil {
-		return checkParamsLenErr
-	}
-
-	// Get min and max from validatorParams
-	var validatorParamSlice []int = validatorParams[0].([]int)
-	var min int = validatorParamSlice[0]
-	var max int = validatorParamSlice[1]
+	optKey string, optValue interface{}, validatorParam interface{}) error {
+	// Get min and max from validatorParam
+	min := validatorParam.([]int)[0]
+	max := validatorParam.([]int)[1]
 
 	errValidateIntMin := ValidateIntMin(optKey, optValue, []int{min})
 	if errValidateIntMin != nil {
