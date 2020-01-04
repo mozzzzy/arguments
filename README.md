@@ -40,14 +40,16 @@ func main() {
   // Define parse rules
 	optionRules := []arguments.Option{
 		{
-			Key:          "help",
+			LongKey:      "help",
+			ShortKey:     "h",
 			ValueType:    "bool",
 			Description:  "show Usage message and exit.",
 			DefaultValue: false,
 			Required:     false,
 		},
 		{
-			Key:          "port",
+			LongKey:      "port",
+			ShortKey:     "p",
 			ValueType:    "int",
 			Description:  "specify port number.",
 			DefaultValue: false,
@@ -63,26 +65,33 @@ func main() {
 
 A rule is defined by `arguments.Option` structure.  
 `arguments.Option` has following public fields.  
-- _Key_  
+- _LongKey_, _ShortKey_  
 	- `string`  
-	- Specify key of this option. If you want to parse `-help` option, set `"help"`.  
+	- Either is required
+	- Specify key of this option. For example, if you want to parse `-help` `-h` option, set `"help"` and "h".  
 - _ValueType_
 	- `string`
+  - Required
 	- Specify this option's value type. `"bool"`, `"duration"`, `"float64"`, `"int"`, `"int64"`, `"string"`, `"uint"`, `"uint64"` is available.
 - _Description_
 	- `string`
+  - Required
 	- Specify the description of this option.
 - _DefaultValue_
 	- `interface{}`
+  - Optional (Default: zero value of each go's data type)
 	- Default value of this option. If this option is not set, this default value is used.
 - _Required_
 	- `bool`
+  - Optional (Default: false)
 	- Specify that this option is required(`true`) or optional(`false`).
 - _Validator_
 	- `func(string, interface{}, interface{}) error`
+  - Optional (Default: do nothing)
 	- Validator of the option value. See [Validate option's value](#Validate-option's-value) for detail.
 - _ValidatorParam_
 	- `interface{}`
+  - Optional (Default: nil)
 	- Validator's parameter. See [Validate option's value](#Validate-option's-value) for detail.
 
 
@@ -138,13 +147,14 @@ import (
 func main() {
 	optionRules := []arguments.Option{
 		{
-			Key:             "port",
+			LongKey:         "port",
+			ShortKey:        "p",
 			ValueType:       "int",
 			Description:     "specify port number.",
 			DefaultValue:    80,
 			Required:        false,
 			Validator:       arguments.ValidateIntMinMax,
-			ValidatorParam: []int{0, 65535},
+			ValidatorParam:  []int{0, 65535},
 		},
 	}
 
