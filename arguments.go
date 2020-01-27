@@ -1,421 +1,309 @@
 package arguments
 
+/*
+ * Module Dependencies
+ */
+
 import (
 	"errors"
-	"flag"
-	"time"
+	"fmt"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"github.com/mozzzzy/arguments/option"
 )
 
 /*
  * Types
  */
 
-type Arguments struct {
-	Options []Option
-}
-
-type Option struct {
-	DefaultValue   interface{}
-	Description    string
-	LongKey        string
-	Required       bool
-	set            bool
-	ShortKey       string
-	Validator      func(string, interface{}, interface{}) error
-	ValidatorParam interface{}
-	Value          interface{}
-	ValueType      string
+type Args struct {
+	Executed string
+	options  []option.Option
+	Operands []string
 }
 
 /*
- * Constants
+ * Constants and Package Scope Variables
  */
 
 /*
- * Functions
+ * Package Private Functions
  */
 
-func (args *Arguments) AddRule(optionRule Option) {
-	args.Options = append(args.Options, optionRule)
+func (args Args) findOptByLongKey(longKey string) *option.Option {
+	for index := 0; index < len(args.options); index++ {
+		if args.options[index].LongKey == longKey {
+			return &args.options[index]
+		}
+	}
+	return nil
 }
 
-func (args *Arguments) AddRules(optionRules []Option) error {
-	for _, opt := range optionRules {
-		args.Options = append(args.Options, opt)
-		err := args.setFlag(&(args.Options[len(args.Options)-1]))
-		if err != nil {
+func (args Args) findOptByShortKey(shortKey string) *option.Option {
+	for index := 0; index < len(args.options); index++ {
+		if args.options[index].ShortKey == shortKey {
+			return &args.options[index]
+		}
+	}
+	return nil
+}
+
+func getKeyStrs(opts []option.Option) []string {
+	keys := []string{}
+	for _, opt := range opts {
+		key := "  "
+		// long key
+		if opt.LongKey != "" {
+			key += "--" + opt.LongKey
+			key += " "
+		}
+		// short key
+		if opt.ShortKey != "" {
+			key += "-" + opt.ShortKey
+			key += " "
+		}
+		// value place holder
+		if opt.ValueType != "" && opt.ValueType != "nil" {
+			key += opt.ValueType
+			key += " "
+		}
+		keys = append(keys, key)
+	}
+	return keys
+}
+
+func getMaxLen(strs []string) int {
+	maxLen := 0
+	for _, str := range strs {
+		if len(str) > maxLen {
+			maxLen = len(str)
+		}
+	}
+	return maxLen
+}
+
+func isLongKey(argStr string) bool {
+	return strings.HasPrefix(argStr, "--")
+}
+
+func isShortKey(argStr string) bool {
+	// argStr is long key
+	if strings.HasPrefix(argStr, "--") {
+		return false
+	}
+	// argStr is operand
+	if !strings.HasPrefix(argStr, "-") {
+		return false
+	}
+	// argStr is not hyphen and one character
+	if len(argStr) != 2 {
+		return false
+	}
+	if !regexp.MustCompile(`[a-zA-Z0-9]`).Match([]byte(argStr[1:])) {
+		return false
+	}
+	return true
+}
+
+func isKey(argStr string) bool {
+	return isLongKey(argStr) || isShortKey(argStr)
+}
+
+/*
+ * Public Functions
+ */
+
+func (args *Args) AddOption(opt option.Option) error {
+	validatedOpt, err := option.New(opt)
+	if err != nil {
+		return err
+	}
+	args.options = append(args.options, *validatedOpt)
+	return nil
+}
+
+func (args *Args) AddOptions(opts []option.Option) error {
+	for index := 0; index < len(opts); index++ {
+		if err := args.AddOption(opts[index]); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (args *Arguments) checkRequired() error {
-	for index, opt := range args.Options {
-		flag.Visit(func(flg *flag.Flag) {
-			if flg.Name == opt.LongKey || flg.Name == opt.ShortKey {
-				args.Options[index].set = true
-			}
-		})
-		if !args.Options[index].set && opt.Required {
-			return errors.New(
-				"Required option" +
-					" -" + opt.LongKey +
-					" (-" + opt.ShortKey +
-					") is not set.")
-		}
+func (args Args) Get(key string) (interface{}, error) {
+	// Find key from long keys
+	opt := args.findOptByLongKey(key)
+	// If long key is not found, find key from short keys
+	if opt == nil {
+		opt = args.findOptByShortKey(key)
 	}
-	return nil
+	// If requested key is not found, return error.
+	if opt == nil {
+		return nil, errors.New(fmt.Sprintf("Required key \"%v\" is not found.", key))
+	}
+	// If requested option and its default value are not set, return error
+	return opt.GetValue()
 }
 
-func (args *Arguments) Get(key string, valuePtr interface{}) error {
-	errorMsg := "-" + key
-	for _, opt := range args.Options {
-		if opt.LongKey != key && opt.ShortKey != key {
+func (args Args) GetInt(key string) (int, error) {
+	var zeroVal int
+	value, err := args.Get(key)
+	if err != nil {
+		return zeroVal, err
+	}
+	integer, ok := value.(int)
+	if !ok {
+		return zeroVal, errors.New(fmt.Sprintf("Value of option \"%v\" is not int.", key))
+	}
+	return integer, nil
+}
+
+func (args Args) GetString(key string) (string, error) {
+	var zeroVal string
+	value, err := args.Get(key)
+	if err != nil {
+		return zeroVal, err
+	}
+	str, ok := value.(string)
+	if !ok {
+		return zeroVal, errors.New(fmt.Sprintf("Value of option \"%v\" is not string.", key))
+	}
+	return str, nil
+}
+
+func (args *Args) Parse() error {
+	for index := 0; index < len(os.Args); index++ {
+		argStr := os.Args[index]
+
+		if index == 0 {
+			args.Executed = argStr
 			continue
 		}
 
-		switch vp := valuePtr.(type) {
-		case *bool:
-			dataTypeStr := "bool"
-			if opt.ValueType != dataTypeStr {
-				return errors.New(
-					errorMsg + " is not " + dataTypeStr + " type, " + opt.ValueType)
-			}
-			*vp = *(opt.Value.(*bool))
-			return nil
+		var opt *option.Option
+		if isLongKey(argStr) {
+			opt = args.findOptByLongKey(argStr[2:])
+		} else if isShortKey(argStr) {
+			opt = args.findOptByShortKey(argStr[1:])
+		} else {
+			// If argStr does not have prefix "--" and "-",
+			// this argStr is operand.
+			args.Operands = append(args.Operands, argStr)
+			continue
+		}
+		// If argStr has prefix "--" or "-"
+		// and the option key is not found in args.options, return error.
+		if opt == nil {
+			return errors.New(fmt.Sprintf("Unknown option %v", argStr))
+		}
 
-		case *(time.Duration):
-			dataTypeStr := "duration"
-			if opt.ValueType != dataTypeStr {
-				return errors.New(
-					errorMsg + " is not " + dataTypeStr + " type, " + opt.ValueType)
-			}
-			*vp = *(opt.Value.(*(time.Duration)))
-			return nil
-
-		case *float64:
-			dataTypeStr := "float64"
-			if opt.ValueType != dataTypeStr {
-				return errors.New(
-					errorMsg + " is not " + dataTypeStr + " type, " + opt.ValueType)
-			}
-			*vp = *(opt.Value.(*float64))
-			return nil
-
-		case *int:
-			dataTypeStr := "int"
-			if opt.ValueType != dataTypeStr {
-				return errors.New(
-					errorMsg + " is not " + dataTypeStr + " type, " + opt.ValueType)
-			}
-			*vp = *(opt.Value.(*int))
-			return nil
-
-		case *int64:
-			dataTypeStr := "int64"
-			if opt.ValueType != dataTypeStr {
-				return errors.New(
-					errorMsg + " is not " + dataTypeStr + " type, " + opt.ValueType)
-			}
-			*vp = *(opt.Value.(*int64))
-			return nil
-
-		case *string:
-			dataTypeStr := "string"
-			if opt.ValueType != dataTypeStr {
-				return errors.New(
-					errorMsg + " is not " + dataTypeStr + " type, " + opt.ValueType)
-			}
-			*vp = *(opt.Value.(*string))
-			return nil
-
-		case *uint:
-			dataTypeStr := "uint"
-			if opt.ValueType != dataTypeStr {
-				return errors.New(
-					errorMsg + " is not " + dataTypeStr + " type, " + opt.ValueType)
-			}
-			*vp = *(opt.Value.(*uint))
-			return nil
-
-		case *uint64:
-			dataTypeStr := "uint64"
-			if opt.ValueType != dataTypeStr {
-				return errors.New(
-					errorMsg + " is not " + dataTypeStr + " type, " + opt.ValueType)
-			}
-			*vp = *(opt.Value.(*uint64))
-			return nil
-
-		default:
-			return errors.New("Invalid second parameter type.")
-		}
-	}
-	return errors.New(errorMsg + " is not found")
-}
-
-func (args *Arguments) IsTrue(key string) bool {
-	for _, opt := range args.Options {
-		if opt.LongKey == key || opt.ShortKey == key {
-			if opt.ValueType != "bool" {
-				return false
-			}
-			return *(opt.Value.(*bool))
-		}
-	}
-	return false
-}
-
-func (args *Arguments) Parse() error {
-	// Parse flags
-	flag.Parse()
-	// Check each required options
-	requiredCheckErr := args.checkRequired()
-	if requiredCheckErr != nil {
-		return requiredCheckErr
-	}
-	// Validate each options
-	validateErr := args.validate()
-	if validateErr != nil {
-		return validateErr
-	}
-	return nil
-}
-
-func (args *Arguments) setFlag(opt *Option) error {
-	// Either LongKey or ShortKey is required.
-	if opt.LongKey == "" && opt.ShortKey == "" {
-		return errors.New(
-			"Failed to set flag. Either of long option or short option is required.")
-	}
-
-	switch opt.ValueType {
-	case "bool":
-		// Check DefaultValue is set or not
-		var defaultValue bool
-		if opt.DefaultValue != nil {
-			defaultValue = opt.DefaultValue.(bool)
-		}
-		valuePtr := new(bool)
-		opt.Value = valuePtr
-		if opt.LongKey != "" {
-			flag.BoolVar(
-				valuePtr,
-				opt.LongKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-		if opt.ShortKey != "" {
-			flag.BoolVar(
-				valuePtr,
-				opt.ShortKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-	case "duration":
-		// Check DefaultValue is set or not
-		var defaultValue time.Duration
-		if opt.DefaultValue != nil {
-			defaultValue = opt.DefaultValue.(time.Duration)
-		}
-		valuePtr := new(time.Duration)
-		opt.Value = valuePtr
-		if opt.LongKey != "" {
-			flag.DurationVar(
-				valuePtr,
-				opt.LongKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-		if opt.ShortKey != "" {
-			flag.DurationVar(
-				valuePtr,
-				opt.ShortKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-	case "float64":
-		// Check DefaultValue is set or not
-		var defaultValue float64
-		if opt.DefaultValue != nil {
-			defaultValue = opt.DefaultValue.(float64)
-		}
-		valuePtr := new(float64)
-		opt.Value = valuePtr
-		if opt.LongKey != "" {
-			flag.Float64Var(
-				valuePtr,
-				opt.LongKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-		if opt.ShortKey != "" {
-			flag.Float64Var(
-				valuePtr,
-				opt.ShortKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-	case "int":
-		// Check DefaultValue is set or not
-		var defaultValue int
-		if opt.DefaultValue != nil {
-			defaultValue = opt.DefaultValue.(int)
-		}
-		valuePtr := new(int)
-		opt.Value = valuePtr
-		if opt.LongKey != "" {
-			flag.IntVar(
-				valuePtr,
-				opt.LongKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-		if opt.ShortKey != "" {
-			flag.IntVar(
-				valuePtr,
-				opt.ShortKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-	case "int64":
-		// Check DefaultValue is set or not
-		var defaultValue int64
-		if opt.DefaultValue != nil {
-			defaultValue = opt.DefaultValue.(int64)
-		}
-		valuePtr := new(int64)
-		opt.Value = valuePtr
-		if opt.LongKey != "" {
-			flag.Int64Var(
-				valuePtr,
-				opt.LongKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-		if opt.ShortKey != "" {
-			flag.Int64Var(
-				valuePtr,
-				opt.ShortKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-	case "string":
-		// Check DefaultValue is set or not
-		var defaultValue string
-		if opt.DefaultValue != nil {
-			defaultValue = opt.DefaultValue.(string)
-		}
-		valuePtr := new(string)
-		opt.Value = valuePtr
-		if opt.LongKey != "" {
-			flag.StringVar(
-				valuePtr,
-				opt.LongKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-		if opt.ShortKey != "" {
-			flag.StringVar(
-				valuePtr,
-				opt.ShortKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-	case "uint":
-		// Check DefaultValue is set or not
-		var defaultValue uint
-		if opt.DefaultValue != nil {
-			defaultValue = opt.DefaultValue.(uint)
-		}
-		valuePtr := new(uint)
-		opt.Value = valuePtr
-		if opt.LongKey != "" {
-			flag.UintVar(
-				valuePtr,
-				opt.LongKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-		if opt.ShortKey != "" {
-			flag.UintVar(
-				valuePtr,
-				opt.ShortKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-	case "uint64":
-		// Check DefaultValue is set or not
-		var defaultValue uint64
-		if opt.DefaultValue != nil {
-			defaultValue = opt.DefaultValue.(uint64)
-		}
-		valuePtr := new(uint64)
-		opt.Value = valuePtr
-		if opt.LongKey != "" {
-			flag.Uint64Var(
-				valuePtr,
-				opt.LongKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-		if opt.ShortKey != "" {
-			flag.Uint64Var(
-				valuePtr,
-				opt.ShortKey,
-				defaultValue,
-				opt.Description,
-			)
-		}
-	default:
-		return errors.New(
-			"Failed to set rule for" +
-				" -" + opt.LongKey +
-				"(-" + opt.ShortKey +
-				"). Invalid data type: " + opt.ValueType)
-	}
-	return nil
-}
-
-func (args *Arguments) Usage() {
-	flag.Usage()
-}
-
-func (args *Arguments) validate() error {
-	// For each options
-	for _, opt := range args.Options {
-		// If the option is set, and validator function is specified
-		if opt.set && opt.Validator != nil {
-			// Execute validator
-			var key string
+		// If found option has already set, return error.
+		if opt.Set == true {
+			msg := "Duplicate definition of "
 			if opt.LongKey != "" {
-				key = opt.LongKey
-			} else if opt.ShortKey != "" {
-				key = opt.ShortKey
+				msg += "--" + opt.LongKey + " "
 			}
-			err := opt.Validator(key, opt.Value, opt.ValidatorParam)
-			// If validator return error, return it
+			if opt.ShortKey != "" {
+				msg += "-" + opt.ShortKey
+			}
+			return errors.New(msg)
+		}
+		opt.Set = true
+
+		// If found option require value, get it from next argStr.
+		switch opt.ValueType {
+		case "":
+			continue
+		case "nil":
+			continue
+		case "string":
+			index++
+			if len(os.Args) <= index || isKey(os.Args[index]) {
+				return errors.New(
+					fmt.Sprintf("option %v requires value but is not speficied.", argStr))
+			}
+			if err := opt.SetValue(os.Args[index]); err != nil {
+				return err
+			}
+		case "int":
+			index++
+			if len(os.Args) <= index {
+				return errors.New(
+					fmt.Sprintf("option %v requires value but is not speficied.", argStr))
+			}
+			integer, err := strconv.Atoi(os.Args[index])
 			if err != nil {
+				return errors.New(
+					fmt.Sprintf(
+						"Invalid int value for %v \"%v\". %v", argStr, os.Args[index], err.Error()))
+			}
+			if err := opt.SetValue(integer); err != nil {
 				return err
 			}
 		}
 	}
-	// If all validator is executed successfully, return nil
+	return args.Validate()
+}
+
+func (arg Args) String() string {
+	str := ""
+	str += "usage: \n"
+
+	// Get strings whose formats are
+	// "  --<long key> -<short key> <data type>"
+	keys := getKeyStrs(arg.options)
+
+	// Get max str length of keys
+	maxLen := getMaxLen(keys)
+
+	// Create usage string
+	for index, opt := range arg.options {
+		// key
+		key := keys[index]
+		str += key
+		for index := 0; index < maxLen-len(key); index++ {
+			str += " "
+		}
+		// description
+		if opt.Description != "" {
+			str += ": "
+			str += opt.Description
+		}
+		// required
+		if opt.Required == true {
+			str += " (required)"
+		}
+		// default value
+		if opt.ValueType != "" && opt.ValueType != "nil" {
+			if opt.DefaultValue != nil {
+				switch opt.ValueType {
+				case "string":
+					defaultValStr, ok := opt.DefaultValue.(string)
+					if ok {
+						str += fmt.Sprintf(" (default: \"%v\")", defaultValStr)
+					}
+				case "int":
+					defaultValInt, ok := opt.DefaultValue.(int)
+					if ok {
+						str += fmt.Sprintf(" (default: %v)", defaultValInt)
+					}
+				}
+			}
+		}
+		str += "\n"
+	}
+	return str
+}
+
+func (arg Args) Validate() error {
+	for _, opt := range arg.options {
+		if err := opt.Validate(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
