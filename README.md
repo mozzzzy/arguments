@@ -13,7 +13,7 @@ So I aggregate codes to provide above operations to this package.
 ## Install
 We can get this package by `go get` command.
 ```sh
-$ go get github.com/mozzzzy/argumets
+$ go get github.com/mozzzzy/arguments
 ```
 
 
