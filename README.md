@@ -20,11 +20,11 @@ $ go get github.com/mozzzzy/arguments
 ## Usage
 We can see an example code in [examples](https://github.com/mozzzzy/arguments/tree/readme/examples) directory.
 ### Import
-First, we have to import `arguments` and `arguments/option` like this.
+First, we have to import `arguments` and `arguments/argumentOption` like this.
 ```go
 import (
   "github.com/mozzzzy/arguments"
-  "github.com/mozzzzy/arguments/option"
+  "github.com/mozzzzy/arguments/argumentOption"
 )
 ```
 
@@ -34,7 +34,7 @@ To parse command line options, we have to create `arguments.Args`
 ```go
 var args arguments.Args
 
-opt := option.Option{
+opt := argumentOption.Option{
 	LongKey:        "long-key",
 	ShortKey:       "s",
 	ValueType:      "string",
@@ -51,20 +51,20 @@ if err := args.AddOption(opt); err != nil {
   
 If we have to parse multiple options, we can use `AddOptions()` method instead.
 ```go
-opt1 := option.Option{
+opt1 := argumentOption.Option{
 	LongKey:        "string",
 	ShortKey:       "s",
 	ValueType:      "string",
 	Description:    "some option.",
 }
-opt2 := option.Option{
+opt2 := argumentOption.Option{
 	LongKey:        "int",
 	ShortKey:       "i",
 	ValueType:      "int",
 	Description:    "some option.",
 }
 
-if err := args.AddOptions([]option.Option{opt1, opt2}); err != nil {
+if err := args.AddOptions([]argumentOption.Option{opt1, opt2}); err != nil {
 	fmt.Println(err.Error())
 	return
 }
@@ -100,11 +100,11 @@ if val, err := args.GetString("long-key"); err != nil {
 
 ## Detailed usage
 ### Required option
-We can specify required options by adding `Required` field to `option.Option`.
+We can specify required options by adding `Required` field to `argumentOption.Option`.
 If the program is executed without the required option,
  `Parse()` method would fail with error.
 ```go
-opt := option.Option{
+opt := argumentOption.Option{
 	LongKey:        "long-key",
 	ShortKey:       "s",
 	ValueType:      "int",
@@ -115,9 +115,9 @@ opt := option.Option{
 
 ### Default value
 We can also specify default value of an option.
-To specify default value, we add `DefaultValue` field to `option.Option`.
+To specify default value, we add `DefaultValue` field to `argumentOption.Option`.
 ```go
-opt := option.Option{
+opt := argumentOption.Option{
 	LongKey:        "long-key",
 	ShortKey:       "s",
 	ValueType:      "int",
@@ -131,7 +131,7 @@ We often have to validate values of specified options.
 This package can validate them easily.  
 We can specify validator function and its parameter to `Validator` and `ValidatorParam`.
 ```go
-opt := option.Option{
+opt := argumentOption.Option{
 	LongKey:        "long-key",
 	ShortKey:       "s",
 	ValueType:      "int",
@@ -142,4 +142,4 @@ opt := option.Option{
 }
 ```
 Validator function should be `func (interface{}, interface{}) error`.  
-The first parameter is the `option.Option` data. The second parameter is `ValidatorParam`.
+The first parameter is the `argumentOption.Option` data. The second parameter is `ValidatorParam`.

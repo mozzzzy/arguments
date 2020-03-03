@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/mozzzzy/arguments"
-	"github.com/mozzzzy/arguments/option"
+	"github.com/mozzzzy/arguments/argumentOption"
 	"github.com/mozzzzy/arguments/validator"
 )
 
@@ -27,7 +27,7 @@ import (
 func main() {
 	var args arguments.Args
 
-	opt1 := option.Option{
+	opt1 := argumentOption.Option{
 		LongKey:        "string",
 		ShortKey:       "s",
 		ValueType:      "string",
@@ -41,7 +41,7 @@ func main() {
 		return
 	}
 
-	opt2 := option.Option{
+	opt2 := argumentOption.Option{
 		LongKey:        "int",
 		ShortKey:       "i",
 		ValueType:      "int",

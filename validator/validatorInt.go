@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/mozzzzy/arguments/option"
+	"github.com/mozzzzy/arguments/argumentOption"
 )
 
 /*
@@ -30,7 +30,7 @@ type ParamInt struct {
  */
 
 func ValidateIntMin(optIf interface{}, paramIf interface{}) error {
-	opt := optIf.(option.Option)
+	opt := optIf.(argumentOption.Option)
 	min := paramIf.(ParamInt).Min
 	val, err := opt.GetValue()
 	if err != nil {
@@ -47,7 +47,7 @@ func ValidateIntMin(optIf interface{}, paramIf interface{}) error {
 }
 
 func ValidateIntMax(optIf interface{}, paramIf interface{}) error {
-	opt := optIf.(option.Option)
+	opt := optIf.(argumentOption.Option)
 	max := paramIf.(ParamInt).Max
 	val, err := opt.GetValue()
 	if err != nil {

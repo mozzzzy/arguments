@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mozzzzy/arguments/option"
+	"github.com/mozzzzy/arguments/argumentOption"
 )
 
 /*
@@ -21,7 +21,7 @@ import (
 
 type Args struct {
 	Executed string
-	options  []option.Option
+	options  []argumentOption.Option
 	Operands []string
 }
 
@@ -33,7 +33,7 @@ type Args struct {
  * Package Private Functions
  */
 
-func (args Args) findOptByLongKey(longKey string) *option.Option {
+func (args Args) findOptByLongKey(longKey string) *argumentOption.Option {
 	for index := 0; index < len(args.options); index++ {
 		if args.options[index].LongKey == longKey {
 			return &args.options[index]
@@ -42,7 +42,7 @@ func (args Args) findOptByLongKey(longKey string) *option.Option {
 	return nil
 }
 
-func (args Args) findOptByShortKey(shortKey string) *option.Option {
+func (args Args) findOptByShortKey(shortKey string) *argumentOption.Option {
 	for index := 0; index < len(args.options); index++ {
 		if args.options[index].ShortKey == shortKey {
 			return &args.options[index]
@@ -51,7 +51,7 @@ func (args Args) findOptByShortKey(shortKey string) *option.Option {
 	return nil
 }
 
-func getKeyStrs(opts []option.Option) []string {
+func getKeyStrs(opts []argumentOption.Option) []string {
 	keys := []string{}
 	for _, opt := range opts {
 		key := "  "
@@ -116,8 +116,8 @@ func isKey(argStr string) bool {
  * Public Functions
  */
 
-func (args *Args) AddOption(opt option.Option) error {
-	validatedOpt, err := option.New(opt)
+func (args *Args) AddOption(opt argumentOption.Option) error {
+	validatedOpt, err := argumentOption.New(opt)
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func (args *Args) AddOption(opt option.Option) error {
 	return nil
 }
 
-func (args *Args) AddOptions(opts []option.Option) error {
+func (args *Args) AddOptions(opts []argumentOption.Option) error {
 	for index := 0; index < len(opts); index++ {
 		if err := args.AddOption(opts[index]); err != nil {
 			return err
@@ -184,7 +184,7 @@ func (args *Args) Parse() error {
 			continue
 		}
 
-		var opt *option.Option
+		var opt *argumentOption.Option
 		if isLongKey(argStr) {
 			opt = args.findOptByLongKey(argStr[2:])
 		} else if isShortKey(argStr) {

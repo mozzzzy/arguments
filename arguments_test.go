@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/mozzzzy/arguments"
-	"github.com/mozzzzy/arguments/option"
+	"github.com/mozzzzy/arguments/argumentOption"
 	"github.com/mozzzzy/testUtil"
 )
 
@@ -23,7 +23,7 @@ import (
 
 func TestValueType(t *testing.T) {
 	t.Run("int", func(t *testing.T) {
-		opts := []option.Option{
+		opts := []argumentOption.Option{
 			{
 				ShortKey:  "i",
 				ValueType: "int",
@@ -43,7 +43,7 @@ func TestValueType(t *testing.T) {
 	})
 
 	t.Run("string", func(t *testing.T) {
-		opts := []option.Option{
+		opts := []argumentOption.Option{
 			{
 				ShortKey:  "s",
 				ValueType: "string",
@@ -65,7 +65,7 @@ func TestValueType(t *testing.T) {
 
 func TestParse(t *testing.T) {
 	t.Run("ShortKey", func(t *testing.T) {
-		opts := []option.Option{
+		opts := []argumentOption.Option{
 			{
 				ShortKey:  "s",
 				ValueType: "int",
@@ -85,7 +85,7 @@ func TestParse(t *testing.T) {
 	})
 
 	t.Run("LongKey", func(t *testing.T) {
-		opts := []option.Option{
+		opts := []argumentOption.Option{
 			{
 				LongKey:   "long",
 				ValueType: "int",
@@ -105,7 +105,7 @@ func TestParse(t *testing.T) {
 	})
 
 	t.Run("Use DefaultValue", func(t *testing.T) {
-		opts := []option.Option{
+		opts := []argumentOption.Option{
 			{
 				LongKey:      "long",
 				ValueType:    "int",
@@ -126,7 +126,7 @@ func TestParse(t *testing.T) {
 	})
 
 	t.Run("OverWrite DefaultValue", func(t *testing.T) {
-		opts := []option.Option{
+		opts := []argumentOption.Option{
 			{
 				LongKey:      "long",
 				ValueType:    "int",
@@ -147,7 +147,7 @@ func TestParse(t *testing.T) {
 	})
 
 	t.Run("Required", func(t *testing.T) {
-		opts := []option.Option{
+		opts := []argumentOption.Option{
 			{
 				LongKey:   "long",
 				ValueType: "int",
@@ -167,7 +167,7 @@ func TestParse(t *testing.T) {
 
 func TestOperand(t *testing.T) {
 	t.Run("Operand", func(t *testing.T) {
-		opts := []option.Option{
+		opts := []argumentOption.Option{
 			{
 				LongKey:   "long",
 				ValueType: "int",
