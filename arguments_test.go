@@ -63,6 +63,59 @@ func TestValueType(t *testing.T) {
 	})
 }
 
+func TestIsSet(t *testing.T) {
+	t.Run("ShortKey", func(t *testing.T) {
+		opts := []argumentOption.Option{
+			{
+				ShortKey:  "s",
+			},
+		}
+		var args arguments.Args
+		addOptErr := args.AddOptions(opts)
+		testUtil.NoError(t, addOptErr)
+
+		os.Args = []string{"some-program", "-s"}
+		parseErr := args.Parse()
+		testUtil.NoError(t, parseErr)
+
+		testUtil.Match(t, true, args.IsSet("s"))
+	})
+
+	t.Run("LongKey", func(t *testing.T) {
+		opts := []argumentOption.Option{
+			{
+				LongKey:   "long",
+			},
+		}
+		var args arguments.Args
+		addOptErr := args.AddOptions(opts)
+		testUtil.NoError(t, addOptErr)
+
+		os.Args = []string{"some-program", "--long"}
+		parseErr := args.Parse()
+		testUtil.NoError(t, parseErr)
+
+		testUtil.Match(t, true, args.IsSet("long"))
+	})
+
+	t.Run("Not set", func(t *testing.T) {
+		opts := []argumentOption.Option{
+			{
+				LongKey:   "long",
+			},
+		}
+		var args arguments.Args
+		addOptErr := args.AddOptions(opts)
+		testUtil.NoError(t, addOptErr)
+
+		os.Args = []string{"some-program"}
+		parseErr := args.Parse()
+		testUtil.NoError(t, parseErr)
+
+		testUtil.Match(t, false, args.IsSet("long"))
+	})
+}
+
 func TestParse(t *testing.T) {
 	t.Run("ShortKey", func(t *testing.T) {
 		opts := []argumentOption.Option{

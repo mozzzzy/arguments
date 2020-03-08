@@ -175,6 +175,20 @@ func (args Args) GetString(key string) (string, error) {
 	return str, nil
 }
 
+func (args Args) IsSet(key string) bool {
+	// Find key from long keys
+	opt := args.findOptByLongKey(key)
+	// If long key is not found, find key from short keys
+	if opt == nil {
+		opt = args.findOptByShortKey(key)
+	}
+	// If requested key is not found, return false.
+	if opt == nil {
+		return false
+	}
+	return opt.Set
+}
+
 func (args *Args) Parse() error {
 	for index := 0; index < len(os.Args); index++ {
 		argStr := os.Args[index]
