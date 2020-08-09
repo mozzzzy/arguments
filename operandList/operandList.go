@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/mozzzzy/arguments/argumentOperand"
+	"github.com/mozzzzy/arguments/v2/argumentOperand"
 )
 
 /*

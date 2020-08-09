@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/mozzzzy/arguments/argumentOption"
+	"github.com/mozzzzy/arguments/v2/argumentOption"
 )
 
 /*

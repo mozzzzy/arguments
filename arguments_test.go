@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mozzzzy/arguments"
-	"github.com/mozzzzy/arguments/argumentOperand"
-	"github.com/mozzzzy/arguments/argumentOption"
+	"github.com/mozzzzy/arguments/v2"
+	"github.com/mozzzzy/arguments/v2/argumentOperand"
+	"github.com/mozzzzy/arguments/v2/argumentOption"
 )
 
 /*

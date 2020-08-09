@@ -7,10 +7,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/mozzzzy/arguments"
-	"github.com/mozzzzy/arguments/argumentOption"
-	"github.com/mozzzzy/arguments/argumentOperand"
-	"github.com/mozzzzy/arguments/validator"
+	"github.com/mozzzzy/arguments/v2"
+	"github.com/mozzzzy/arguments/v2/argumentOption"
+	"github.com/mozzzzy/arguments/v2/argumentOperand"
+	"github.com/mozzzzy/arguments/v2/validator"
 )
 
 /*
@@ -123,16 +123,12 @@ func main() {
 
 	if integer2, err := args.GetIntOperand("operand2"); err != nil {
 		fmt.Println(err.Error())
-		fmt.Println(args)
-		return
 	} else {
 		fmt.Println(integer2)
 	}
 
 	if integer3, err := args.GetIntOperand("operand3"); err != nil {
 		fmt.Println(err.Error())
-		fmt.Println(args)
-		return
 	} else {
 		fmt.Println(integer3)
 	}

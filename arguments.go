@@ -10,10 +10,10 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/mozzzzy/arguments/argumentOption"
-	"github.com/mozzzzy/arguments/argumentOperand"
-	"github.com/mozzzzy/arguments/operandList"
-	"github.com/mozzzzy/arguments/optionList"
+	"github.com/mozzzzy/arguments/v2/argumentOption"
+	"github.com/mozzzzy/arguments/v2/argumentOperand"
+	"github.com/mozzzzy/arguments/v2/operandList"
+	"github.com/mozzzzy/arguments/v2/optionList"
 )
 
 /*
