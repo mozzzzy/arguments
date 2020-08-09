@@ -51,6 +51,22 @@ func validateRule(opt Option) error {
  * Public Functions
  */
 
+func New(opt Option) (*Option, error) {
+	// Validate
+	if err := validateRule(opt); err != nil {
+		return nil, err
+	}
+	return &opt, nil
+}
+
+/*
+ * Package Private Methods
+ */
+
+/*
+ * Public Methods
+ */
+
 func (opt *Option) GetValue() (interface{}, error) {
 	if !opt.Set && opt.DefaultValue == nil {
 		return nil, errors.New(
@@ -64,27 +80,12 @@ func (opt *Option) GetValue() (interface{}, error) {
 	return opt.Value, nil
 }
 
-func New(opt Option) (*Option, error) {
-	// Validate
-	if err := validateRule(opt); err != nil {
-		return nil, err
-	}
-
-	// Set value type to nil if it is not specified
-	if opt.ValueType == "" {
-		opt.ValueType = "nil"
-	}
-
-	return &opt, nil
-}
-
 func (opt *Option) SetValue(value interface{}) error {
 	if value == nil {
 		return errors.New("nil is invalid for SetValue func's param.")
 	}
 	switch opt.ValueType {
 	case "":
-	case "nil":
 	case "string":
 		str, ok := value.(string)
 		if ok {
@@ -111,6 +112,10 @@ func (opt *Option) SetValue(value interface{}) error {
 	return nil
 }
 
+func (opt Option) ValueRequired() bool {
+	return opt.ValueType == "string" || opt.ValueType == "int"
+}
+
 func (opt Option) Validate() error {
 	// Required but not set
 	if opt.Required && opt.Value == nil {
@@ -123,4 +128,25 @@ func (opt Option) Validate() error {
 		return opt.Validator(opt, opt.ValidatorParam)
 	}
 	return nil
+}
+
+func (opt Option) String() string {
+	str := ""
+	// long key
+	if opt.LongKey != "" {
+		str += "--" + opt.LongKey
+	}
+	// short key
+	if opt.ShortKey != "" {
+		if len(str) != 0 {
+			str += " "
+		}
+		str += "-" + opt.ShortKey
+	}
+	// value type
+	if opt.ValueType != "" {
+		str += " "
+		str += opt.ValueType
+	}
+	return str
 }

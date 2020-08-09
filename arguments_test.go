@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/mozzzzy/arguments"
+	"github.com/mozzzzy/arguments/argumentOperand"
 	"github.com/mozzzzy/arguments/argumentOption"
-	"github.com/mozzzzy/testUtil"
 )
 
 /*
@@ -16,6 +16,24 @@ import (
 /*
  * Functions
  */
+
+func Match(t *testing.T, expected interface{}, actual interface{}) {
+	if expected != actual {
+		t.Errorf("Expected: %v, Actual: %v", expected, actual)
+	}
+}
+
+func NoError(t *testing.T, err error) {
+	if err != nil {
+		t.Errorf("Got error: %v", err)
+	}
+}
+
+func WithError(t *testing.T, err error) {
+	if err == nil {
+		t.Errorf("Should got error but nil")
+	}
+}
 
 /*
  * Tests
@@ -31,15 +49,15 @@ func TestValueType(t *testing.T) {
 		}
 		var args arguments.Args
 		addOptErr := args.AddOptions(opts)
-		testUtil.NoError(t, addOptErr)
+		NoError(t, addOptErr)
 
 		os.Args = []string{"some-program", "-i", "10"}
 		parseErr := args.Parse()
-		testUtil.NoError(t, parseErr)
+		NoError(t, parseErr)
 
-		val, getIntErr := args.GetInt("i")
-		testUtil.Match(t, 10, val)
-		testUtil.NoError(t, getIntErr)
+		val, getIntErr := args.GetIntOpt("i")
+		Match(t, 10, val)
+		NoError(t, getIntErr)
 	})
 
 	t.Run("string", func(t *testing.T) {
@@ -51,68 +69,68 @@ func TestValueType(t *testing.T) {
 		}
 		var args arguments.Args
 		addOptErr := args.AddOptions(opts)
-		testUtil.NoError(t, addOptErr)
+		NoError(t, addOptErr)
 
 		os.Args = []string{"some-program", "-s", "some-string"}
 		parseErr := args.Parse()
-		testUtil.NoError(t, parseErr)
+		NoError(t, parseErr)
 
-		val, getStringErr := args.GetString("s")
-		testUtil.Match(t, "some-string", val)
-		testUtil.NoError(t, getStringErr)
+		val, getStringErr := args.GetStringOpt("s")
+		Match(t, "some-string", val)
+		NoError(t, getStringErr)
 	})
 }
 
-func TestIsSet(t *testing.T) {
+func TestOptIsSet(t *testing.T) {
 	t.Run("ShortKey", func(t *testing.T) {
 		opts := []argumentOption.Option{
 			{
-				ShortKey:  "s",
+				ShortKey: "s",
 			},
 		}
 		var args arguments.Args
 		addOptErr := args.AddOptions(opts)
-		testUtil.NoError(t, addOptErr)
+		NoError(t, addOptErr)
 
 		os.Args = []string{"some-program", "-s"}
 		parseErr := args.Parse()
-		testUtil.NoError(t, parseErr)
+		NoError(t, parseErr)
 
-		testUtil.Match(t, true, args.IsSet("s"))
+		Match(t, true, args.OptIsSet("s"))
 	})
 
 	t.Run("LongKey", func(t *testing.T) {
 		opts := []argumentOption.Option{
 			{
-				LongKey:   "long",
+				LongKey: "long",
 			},
 		}
 		var args arguments.Args
 		addOptErr := args.AddOptions(opts)
-		testUtil.NoError(t, addOptErr)
+		NoError(t, addOptErr)
 
 		os.Args = []string{"some-program", "--long"}
 		parseErr := args.Parse()
-		testUtil.NoError(t, parseErr)
+		NoError(t, parseErr)
 
-		testUtil.Match(t, true, args.IsSet("long"))
+		Match(t, true, args.OptIsSet("long"))
 	})
 
 	t.Run("Not set", func(t *testing.T) {
 		opts := []argumentOption.Option{
 			{
-				LongKey:   "long",
+				LongKey: "long",
 			},
 		}
 		var args arguments.Args
 		addOptErr := args.AddOptions(opts)
-		testUtil.NoError(t, addOptErr)
+		NoError(t, addOptErr)
 
 		os.Args = []string{"some-program"}
 		parseErr := args.Parse()
-		testUtil.NoError(t, parseErr)
+		NoError(t, parseErr)
 
-		testUtil.Match(t, false, args.IsSet("long"))
+		Match(t, false, args.OptIsSet("long"))
 	})
 }
 
@@ -126,15 +144,15 @@ func TestParse(t *testing.T) {
 		}
 		var args arguments.Args
 		addOptErr := args.AddOptions(opts)
-		testUtil.NoError(t, addOptErr)
+		NoError(t, addOptErr)
 
 		os.Args = []string{"some-program", "-s", "10"}
 		parseErr := args.Parse()
-		testUtil.NoError(t, parseErr)
+		NoError(t, parseErr)
 
-		val, getIntErr := args.GetInt("s")
-		testUtil.Match(t, 10, val)
-		testUtil.NoError(t, getIntErr)
+		val, getIntErr := args.GetIntOpt("s")
+		Match(t, 10, val)
+		NoError(t, getIntErr)
 	})
 
 	t.Run("LongKey", func(t *testing.T) {
@@ -146,15 +164,15 @@ func TestParse(t *testing.T) {
 		}
 		var args arguments.Args
 		addOptErr := args.AddOptions(opts)
-		testUtil.NoError(t, addOptErr)
+		NoError(t, addOptErr)
 
 		os.Args = []string{"some-program", "--long", "10"}
 		parseErr := args.Parse()
-		testUtil.NoError(t, parseErr)
+		NoError(t, parseErr)
 
-		val, getIntErr := args.GetInt("long")
-		testUtil.Match(t, 10, val)
-		testUtil.NoError(t, getIntErr)
+		val, getIntErr := args.GetIntOpt("long")
+		Match(t, 10, val)
+		NoError(t, getIntErr)
 	})
 
 	t.Run("Use DefaultValue", func(t *testing.T) {
@@ -167,15 +185,15 @@ func TestParse(t *testing.T) {
 		}
 		var args arguments.Args
 		addOptErr := args.AddOptions(opts)
-		testUtil.NoError(t, addOptErr)
+		NoError(t, addOptErr)
 
 		os.Args = []string{"some-program"}
 		parseErr := args.Parse()
-		testUtil.NoError(t, parseErr)
+		NoError(t, parseErr)
 
-		val, getIntErr := args.GetInt("long")
-		testUtil.Match(t, 10, val)
-		testUtil.NoError(t, getIntErr)
+		val, getIntErr := args.GetIntOpt("long")
+		Match(t, 10, val)
+		NoError(t, getIntErr)
 	})
 
 	t.Run("OverWrite DefaultValue", func(t *testing.T) {
@@ -188,15 +206,15 @@ func TestParse(t *testing.T) {
 		}
 		var args arguments.Args
 		addOptErr := args.AddOptions(opts)
-		testUtil.NoError(t, addOptErr)
+		NoError(t, addOptErr)
 
 		os.Args = []string{"some-program", "--long", "10"}
 		parseErr := args.Parse()
-		testUtil.NoError(t, parseErr)
+		NoError(t, parseErr)
 
-		val, getIntErr := args.GetInt("long")
-		testUtil.Match(t, 10, val)
-		testUtil.NoError(t, getIntErr)
+		val, getIntErr := args.GetIntOpt("long")
+		Match(t, 10, val)
+		NoError(t, getIntErr)
 	})
 
 	t.Run("Required", func(t *testing.T) {
@@ -209,39 +227,120 @@ func TestParse(t *testing.T) {
 		}
 		var args arguments.Args
 		addOptErr := args.AddOptions(opts)
-		testUtil.NoError(t, addOptErr)
+		NoError(t, addOptErr)
 
 		os.Args = []string{"some-program"}
 		parseErr := args.Parse()
-		testUtil.WithError(t, parseErr)
+		WithError(t, parseErr)
 	})
-
 }
 
 func TestOperand(t *testing.T) {
-	t.Run("Operand", func(t *testing.T) {
-		opts := []argumentOption.Option{
+	t.Run("string", func(t *testing.T) {
+		var args arguments.Args
+
+		opes := []argumentOperand.Operand{
 			{
-				LongKey:   "long",
+				Key:       "operand1",
+				ValueType: "string",
+			},
+		}
+		addOpeErr := args.AddOperands(opes)
+		NoError(t, addOpeErr)
+
+		os.Args = []string{"some-program", "string"}
+		parseErr := args.Parse()
+		NoError(t, parseErr)
+
+		Match(t, "some-program", args.Executed)
+
+		ope1, getStrErr1 := args.GetStringOperand("operand1")
+		Match(t, "string", ope1)
+		NoError(t, getStrErr1)
+	})
+
+	t.Run("int", func(t *testing.T) {
+		var args arguments.Args
+
+		opes := []argumentOperand.Operand{
+			{
+				Key:       "operand1",
 				ValueType: "int",
 			},
 		}
-		var args arguments.Args
-		addOptErr := args.AddOptions(opts)
-		testUtil.NoError(t, addOptErr)
+		addOpeErr := args.AddOperands(opes)
+		NoError(t, addOpeErr)
 
-		os.Args = []string{"some-program", "--long", "10", "operand1", "operand2"}
+		os.Args = []string{"some-program", "10"}
 		parseErr := args.Parse()
-		testUtil.NoError(t, parseErr)
+		NoError(t, parseErr)
 
-		val, getIntErr := args.GetInt("long")
-		testUtil.Match(t, 10, val)
-		testUtil.NoError(t, getIntErr)
+		Match(t, "some-program", args.Executed)
 
-		testUtil.Match(t, "some-program", args.Executed)
+		ope1, getStrErr1 := args.GetIntOperand("operand1")
+		Match(t, 10, ope1)
+		NoError(t, getStrErr1)
+	})
 
-		testUtil.Match(t, 2, len(args.Operands))
-		testUtil.Match(t, "operand1", args.Operands[0])
-		testUtil.Match(t, "operand2", args.Operands[1])
+	t.Run("Use DefaultValue", func(t *testing.T) {
+		var args arguments.Args
+
+		opes := []argumentOperand.Operand{
+			{
+				Key:          "operand1",
+				ValueType:    "int",
+				DefaultValue: 10,
+			},
+		}
+		addOpeErr := args.AddOperands(opes)
+		NoError(t, addOpeErr)
+
+		os.Args = []string{"some-program"}
+		parseErr := args.Parse()
+		NoError(t, parseErr)
+
+		ope1, getIntErr1 := args.GetIntOperand("operand1")
+		Match(t, 10, ope1)
+		NoError(t, getIntErr1)
+	})
+
+	t.Run("OverWrite DefaultValue", func(t *testing.T) {
+		var args arguments.Args
+
+		opes := []argumentOperand.Operand{
+			{
+				Key:          "operand1",
+				ValueType:    "int",
+				DefaultValue: 10,
+			},
+		}
+		addOpeErr := args.AddOperands(opes)
+		NoError(t, addOpeErr)
+
+		os.Args = []string{"some-program", "20"}
+		parseErr := args.Parse()
+		NoError(t, parseErr)
+
+		ope1, getIntErr1 := args.GetIntOperand("operand1")
+		Match(t, 20, ope1)
+		NoError(t, getIntErr1)
+	})
+
+	t.Run("Required", func(t *testing.T) {
+		var args arguments.Args
+
+		opes := []argumentOperand.Operand{
+			{
+				Key:       "operand1",
+				ValueType: "int",
+				Required:  true,
+			},
+		}
+		addOpeErr := args.AddOperands(opes)
+		NoError(t, addOpeErr)
+
+		os.Args = []string{"some-program"}
+		parseErr := args.Parse()
+		WithError(t, parseErr)
 	})
 }

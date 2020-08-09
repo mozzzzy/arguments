@@ -9,6 +9,7 @@ import (
 
 	"github.com/mozzzzy/arguments"
 	"github.com/mozzzzy/arguments/argumentOption"
+	"github.com/mozzzzy/arguments/argumentOperand"
 	"github.com/mozzzzy/arguments/validator"
 )
 
@@ -36,11 +37,6 @@ func main() {
 		Validator:      validator.ValidateString,
 		ValidatorParam: validator.ParamString{Min: 3, Max: 5},
 	}
-	if err := args.AddOption(opt1); err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
 	opt2 := argumentOption.Option{
 		LongKey:        "int",
 		ShortKey:       "i",
@@ -50,7 +46,43 @@ func main() {
 		Validator:      validator.ValidateInt,
 		ValidatorParam: validator.ParamInt{Min: 10, Max: 100},
 	}
-	if err := args.AddOption(opt2); err != nil {
+	opt3 := argumentOption.Option{
+		LongKey:        "bool",
+		ShortKey:       "b",
+		Description:    "some option.",
+	}
+
+	if err := args.AddOption(opt1); err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	if err := args.AddOptions([]argumentOption.Option {opt2, opt3}); err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	ope1 := argumentOperand.Operand{
+		Key: "operand1",
+		ValueType: "string",
+		Description: "some operand",
+		Required: true,
+	}
+	ope2 := argumentOperand.Operand{
+		Key: "operand2",
+		ValueType: "int",
+		Description: "some operand",
+	}
+	ope3 := argumentOperand.Operand{
+		Key: "operand3",
+		ValueType: "int",
+		Description: "some operand",
+	}
+
+	if err := args.AddOperand(ope1); err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	if err := args.AddOperands([]argumentOperand.Operand {ope2, ope3}); err != nil {
 		fmt.Println(err.Error())
 		return
 	}
@@ -61,17 +93,47 @@ func main() {
 		return
 	}
 
-	if str, err := args.GetString("string"); err != nil {
+	if str1, err := args.GetStringOpt("string"); err != nil {
 		fmt.Println(err.Error())
 		fmt.Println(args)
 	} else {
-		fmt.Println(str)
+		fmt.Println(str1)
 	}
 
-	if str, err := args.GetInt("int"); err != nil {
+	if integer1, err := args.GetIntOpt("int"); err != nil {
 		fmt.Println(err.Error())
 		fmt.Println(args)
 	} else {
-		fmt.Println(str)
+		fmt.Println(integer1)
+	}
+
+	if args.OptIsSet("b") {
+		fmt.Println("--bool -b option is set.")
+	} else {
+		fmt.Println("--bool -b option is not set.")
+	}
+
+	if str2, err := args.GetStringOperand("operand1"); err != nil {
+		fmt.Println(err.Error())
+		fmt.Println(args)
+		return
+	} else {
+		fmt.Println(str2)
+	}
+
+	if integer2, err := args.GetIntOperand("operand2"); err != nil {
+		fmt.Println(err.Error())
+		fmt.Println(args)
+		return
+	} else {
+		fmt.Println(integer2)
+	}
+
+	if integer3, err := args.GetIntOperand("operand3"); err != nil {
+		fmt.Println(err.Error())
+		fmt.Println(args)
+		return
+	} else {
+		fmt.Println(integer3)
 	}
 }
